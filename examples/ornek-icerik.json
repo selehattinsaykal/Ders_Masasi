@@ -1,0 +1,84 @@
+{
+  "format": "studyapp-content",
+  "version": 1,
+  "course": "Veri Yapıları",
+  "decks": [
+    {
+      "title": "Ağaçlar",
+      "cards": [
+        {
+          "front": "AVL ağacında denge faktörü nedir?",
+          "back": "Sol ve sağ alt ağaç yükseklikleri farkı: $h_{sol} - h_{sağ} \\in \\{-1, 0, 1\\}$",
+          "hint": "Yükseklik farkı",
+          "topic": "Ağaçlar"
+        }
+      ]
+    }
+  ],
+  "questionSets": [
+    {
+      "title": "2024 Güz Vize",
+      "kind": "cikmis",
+      "year": 2024,
+      "term": "Güz",
+      "examType": "vize",
+      "durationMin": 60,
+      "questions": [
+        {
+          "type": "mcq",
+          "prompt": "Yığın (stack) hangi ilkeyle çalışır?",
+          "options": [
+            "FIFO",
+            "LIFO",
+            "Rastgele erişim",
+            "Öncelik sırası"
+          ],
+          "answer": "B",
+          "explanation": "Son giren ilk çıkar.",
+          "topic": "Yığın"
+        },
+        {
+          "type": "tf",
+          "prompt": "İkili arama, sırasız bir dizide de doğru sonuç verir.",
+          "answer": false,
+          "explanation": "İkili arama yalnızca sıralı dizide çalışır.",
+          "topic": "Arama"
+        },
+        {
+          "type": "fill",
+          "prompt": "Kuyruk ___ ilkesiyle çalışır.",
+          "answers": [
+            "FIFO",
+            "ilk giren ilk çıkar"
+          ],
+          "topic": "Kuyruk"
+        },
+        {
+          "type": "open",
+          "prompt": "Bağlı liste ile dizinin araya eleman ekleme maliyetini karşılaştır.",
+          "solution": "Dizide kaydırma gerektiği için $O(n)$; bağlı listede düğüm biliniyorsa $O(1)$.",
+          "topic": "Bağlı liste"
+        },
+        {
+          "type": "code",
+          "prompt": "Girdiden bir n tam sayısı oku ve n faktöriyeli yazdır.",
+          "language": "python",
+          "pythonVersion": "3.9",
+          "starter": "n = int(input())\n# kodunu buraya yaz\n",
+          "solution": "n = int(input())\nsonuc = 1\nfor i in range(2, n + 1):\n    sonuc *= i\nprint(sonuc)",
+          "tests": [
+            {
+              "stdin": "5\n",
+              "expected": "120\n"
+            },
+            {
+              "stdin": "0\n",
+              "expected": "1\n"
+            }
+          ],
+          "topic": "Döngüler"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,302 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/bricolage-grotesque';
+@import '@fontsource-variable/figtree';
+@import '@fontsource-variable/jetbrains-mono';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Kareli defter, tükenmez kalem mavisi, fosforlu kalem sarısı. */
+:root {
+  --paper: #f6f7fb;
+  --grid: #e9ecf5;
+  --surface: #ffffff;
+  --sunken: #eff1f8;
+  --ink: #1b2440;
+  --ink-soft: #55607f;
+  --line: #dfe3ee;
+  --pen: #2747d4;
+  --pen-strong: #1c36ac;
+  --pen-soft: #e8ecfd;
+  --on-pen: #ffffff;
+  --marker: #ffe45c;
+  --marker-wash: #fff3a8;
+  --ok: #14845a;
+  --ok-soft: #dff4e9;
+  --bad: #cf3b3b;
+  --bad-soft: #fde7e5;
+  --warn: #a8530a;
+  --warn-soft: #fdefd8;
+  color-scheme: light;
+}
+
+.dark {
+  --paper: #10142a;
+  --grid: #171c38;
+  --surface: #181d38;
+  --sunken: #121631;
+  --ink: #eef0fa;
+  --ink-soft: #a3abc9;
+  --line: #2b3257;
+  --pen: #8ea2ff;
+  --pen-strong: #aab9ff;
+  --pen-soft: #232b58;
+  --on-pen: #10142a;
+  --marker: #ffe45c;
+  --marker-wash: rgb(255 228 92 / 0.26);
+  --ok: #4fd1a0;
+  --ok-soft: #153a2f;
+  --bad: #ff8a80;
+  --bad-soft: #44201f;
+  --warn: #f5b85c;
+  --warn-soft: #3c2d12;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-ink: var(--ink);
+  --color-soft: var(--ink-soft);
+  --color-line: var(--line);
+  --color-pen: var(--pen);
+  --color-pen-strong: var(--pen-strong);
+  --color-pen-soft: var(--pen-soft);
+  --color-on-pen: var(--on-pen);
+  --color-marker: var(--marker);
+  --color-marker-wash: var(--marker-wash);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --font-sans: 'Figtree Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', 'Figtree Variable', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'Cascadia Code', Consolas, monospace;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    color: var(--ink);
+    background-color: var(--paper);
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 22px 22px;
+    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.015em;
+  }
+  button,
+  a,
+  summary,
+  [role='button'] {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+  :focus-visible {
+    outline: 2px solid var(--pen);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  ::selection {
+    background: var(--marker);
+    color: #1b2440;
+  }
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+}
+
+/* Fosforlu kalem: önemli sayıların ve etkin öğenin altından geçen sarı çizgi. */
+.marker {
+  background-image: linear-gradient(transparent 58%, var(--marker-wash) 58%, var(--marker-wash) 92%, transparent 92%);
+  padding-inline: 0.12em;
+  margin-inline: -0.12em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Çalışma kartı çevirme */
+.flip-scene {
+  perspective: 1400px;
+}
+.flip-card {
+  display: grid;
+  transform-style: preserve-3d;
+  transition: transform 0.45s cubic-bezier(0.3, 0.7, 0.2, 1);
+}
+.flip-card.is-flipped {
+  transform: rotateY(180deg);
+}
+/* İki yüz aynı hücrede durur: kartın yüksekliği uzun olan yüze göre belirlenir. */
+.flip-face {
+  grid-area: 1 / 1;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.flip-face.is-back {
+  transform: rotateY(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Markdown içeriği */
+.md {
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.md > :first-child {
+  margin-top: 0;
+}
+.md > :last-child {
+  margin-bottom: 0;
+}
+.md p,
+.md ul,
+.md ol,
+.md pre,
+.md table,
+.md blockquote {
+  margin-block: 0.6em;
+}
+.md ul {
+  list-style: disc;
+  padding-left: 1.3em;
+}
+.md ol {
+  list-style: decimal;
+  padding-left: 1.4em;
+}
+.md h1,
+.md h2,
+.md h3,
+.md h4 {
+  font-weight: 650;
+  margin-block: 0.9em 0.4em;
+  font-size: 1.08em;
+}
+.md a {
+  color: var(--pen);
+  text-decoration: underline;
+}
+.md code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: var(--sunken);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 0.08em 0.32em;
+}
+.md pre {
+  background: var(--sunken);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.75em 0.9em;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+.md pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 0.85em;
+}
+.md img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  background: #fff;
+}
+.md blockquote {
+  border-left: 3px solid var(--line);
+  padding-left: 0.8em;
+  color: var(--ink-soft);
+}
+.md table {
+  border-collapse: collapse;
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+}
+.md th,
+.md td {
+  border: 1px solid var(--line);
+  padding: 0.3em 0.6em;
+  text-align: left;
+}
+.md .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-block: 0.2em;
+}
+
+/* Kod renklendirme (highlight.js sınıfları) */
+.hljs-keyword,
+.hljs-literal,
+.hljs-built_in,
+.hljs-type {
+  color: var(--pen);
+}
+.hljs-string,
+.hljs-regexp,
+.hljs-symbol {
+  color: var(--ok);
+}
+.hljs-number,
+.hljs-meta {
+  color: var(--warn);
+}
+.hljs-comment,
+.hljs-quote {
+  color: var(--ink-soft);
+  font-style: italic;
+}
+.hljs-title,
+.hljs-function .hljs-title,
+.hljs-section {
+  color: var(--bad);
+}
+
+/* PDF sayfaları */
+.pdf-invert canvas {
+  filter: invert(0.9) hue-rotate(180deg);
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
