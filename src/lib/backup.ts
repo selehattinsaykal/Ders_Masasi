@@ -176,7 +176,7 @@ export async function readManifest(file: Blob): Promise<Manifest> {
   return o.manifest
 }
 
-/** Eski şema sürümlerindeki veriyi güncel şemaya taşır. Şimdilik tek sürüm var. */
+/** Eski şema sürümlerindeki veriyi güncel şemaya taşır. 1 → 2: yalnızca notlar tablosu eklendi, dönüşüm gerekmez. */
 function migrate(rows: Rows, _from: number): Rows {
   return rows
 }

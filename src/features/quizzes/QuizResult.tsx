@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ChevronDown, RotateCcw, Trash2 } from 'lucide-react'
+import { ChevronDown, RotateCcw, Sparkles, Trash2 } from 'lucide-react'
 import { db, deleteAttempt, getSetting } from '../../db/db'
 import { MODE_LABEL, QUESTION_TYPE_LABEL, type Answer, type Question, type Result } from '../../db/schema'
-import { LETTERS, cx, formatDateTime, formatDuration } from '../../lib/format'
+import { LETTERS, cx, formatDateTime, formatDuration, plainText } from '../../lib/format'
 import { netScore, percentOf } from '../../lib/grading'
 import { correctAnswerText, recount, startAttempt } from '../../lib/quiz'
 import { groupAccuracy } from '../../lib/stats'
@@ -13,6 +13,7 @@ import { Markdown } from '../../ui/Markdown'
 import { AccuracyBars } from '../../ui/charts'
 import { useFeedback } from '../../ui/feedback'
 import { Badge, Button, Check, Empty, PageHeader, Panel, ScoreRow, SectionTitle } from '../../ui/kit'
+import { MistakesPrompt, toMistake } from '../content-import/MistakesPrompt'
 
 const RESULT_TEXT: Record<Result, string> = { correct: 'Doğru', wrong: 'Yanlış', partial: 'Kısmen', blank: 'Boş' }
 const RESULT_TONE: Record<Result, 'ok' | 'bad' | 'warn' | 'neutral'> = { correct: 'ok', wrong: 'bad', partial: 'warn', blank: 'neutral' }
@@ -34,22 +35,24 @@ export default function QuizResult() {
   const { confirm } = useFeedback()
   const [onlyMissed, setOnlyMissed] = useState(false)
   const [openId, setOpenId] = useState<string | null>(null)
+  const [asking, setAsking] = useState(false)
 
   const data = useLiveQuery(async () => {
     const attempt = await db.attempts.get(id)
     if (!attempt) return null
+    const course = await db.courses.get(attempt.courseId)
     const [questions, answers, ratio] = await Promise.all([
       db.questions.bulkGet(attempt.questionIds),
       db.answers.where('attemptId').equals(id).toArray(),
       getSetting(db, 'negativeRatio', 0),
     ])
-    return { attempt, questions: questions.filter((q): q is Question => !!q), answers: new Map(answers.map((a) => [a.questionId, a])), ratio }
+    return { attempt, courseName: course?.name ?? '', questions: questions.filter((q): q is Question => !!q), answers: new Map(answers.map((a) => [a.questionId, a])), ratio }
   }, [id])
 
   if (data === undefined) return null
   if (data === null) return <Empty title="Bu deneme bulunamadı">Silinmiş olabilir.</Empty>
 
-  const { attempt, questions, answers, ratio } = data
+  const { attempt, courseName, questions, answers, ratio } = data
   const total = attempt.correct + attempt.wrong + attempt.blank + attempt.partial
   const percent = percentOf(attempt.correct, attempt.partial, total)
   const pending = questions.filter((q) => answers.get(q.id)?.needsReview)
@@ -166,6 +169,11 @@ export default function QuizResult() {
               </Button>
             )}
             <Button onClick={() => retry(questions, attempt.title, 'calisma')}>Tümünü yeniden çöz</Button>
+            {missed.length > 0 && (
+              <Button icon={<Sparkles size={17} />} onClick={() => setAsking(true)}>
+                Benzer soru iste
+              </Button>
+            )}
             <Button variant="ghost" icon={<Trash2 size={17} />} onClick={remove}>
               Denemeyi sil
             </Button>
@@ -214,7 +222,7 @@ export default function QuizResult() {
                   <Panel>
                     <button type="button" aria-expanded={open} onClick={() => setOpenId(open ? null : q.id)} className="flex w-full items-start gap-3 px-4 py-3 text-left">
                       <span className="tabular w-7 shrink-0 pt-0.5 text-right font-bold text-soft">{i + 1}.</span>
-                      <span className={cx('min-w-0 flex-1', !open && 'line-clamp-2')}>{open ? <Markdown>{q.prompt}</Markdown> : q.prompt}</span>
+                      <span className={cx('min-w-0 flex-1', !open && 'line-clamp-2')}>{open ? <Markdown>{q.prompt}</Markdown> : plainText(q.prompt)}</span>
                       <Badge tone={a?.needsReview ? 'pen' : RESULT_TONE[result]}>{a?.needsReview ? 'Değerlendir' : RESULT_TEXT[result]}</Badge>
                       <ChevronDown size={18} className={cx('mt-0.5 shrink-0 text-soft transition-transform', open && 'rotate-180')} />
                     </button>
@@ -273,6 +281,13 @@ export default function QuizResult() {
           </ol>
         </section>
       </div>
+      <MistakesPrompt
+        open={asking}
+        onClose={() => setAsking(false)}
+        course={courseName}
+        courseId={attempt.courseId}
+        items={missed.map((q) => toMistake(q, answers.get(q.id)?.response))}
+      />
     </>
   )
 }

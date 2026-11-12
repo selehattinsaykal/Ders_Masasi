@@ -100,3 +100,8 @@ export function shuffle<T>(list: T[]): T[] {
 export function cx(...parts: (string | false | null | undefined)[]): string {
   return parts.filter(Boolean).join(' ')
 }
+
+/** Markdown metnini liste ve aramada gösterilecek düz metne çevirir; gömülü görseller "[görsel]" olur. */
+export function plainText(md: string): string {
+  return md.replace(/!\[[^\]]*\]\([^)]*\)/g, '[görsel]').replace(/\s+/g, ' ').trim()
+}

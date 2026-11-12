@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Plus, Terminal, Trash2 } from 'lucide-react'
 import { db, removeRows } from '../../db/db'
 import type { Course } from '../../db/schema'
-import { relativeDay } from '../../lib/format'
+import { relativeDay, plainText } from '../../lib/format'
 import { buildQuestionStats } from '../../lib/quiz'
 import { Badge, Button, Empty, IconButton, SectionTitle } from '../../ui/kit'
 
@@ -63,7 +63,7 @@ export function CodeTab({ course }: { course: Course }) {
               return (
                 <li key={q.id}>
                   <Link to={`/set/${q.setId}`} className="block rounded-xl border border-line bg-surface px-4 py-3 hover:border-pen">
-                    <p className="line-clamp-2">{q.prompt}</p>
+                    <p className="line-clamp-2">{plainText(q.prompt)}</p>
                     <p className="mt-1 flex flex-wrap gap-1.5 text-sm">
                       {q.pythonVersion && <Badge>Python {q.pythonVersion}</Badge>}
                       {q.tests?.length ? <Badge tone="pen">{q.tests.length} test</Badge> : <Badge>Kendin değerlendir</Badge>}

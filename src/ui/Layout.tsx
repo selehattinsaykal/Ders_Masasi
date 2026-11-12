@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   BarChart3,
   BookOpen,
+  Calculator,
   CalendarDays,
   DatabaseBackup,
   FileJson,
@@ -39,6 +40,7 @@ const MAIN: Item[] = [
 const MORE: Item[] = [
   { to: '/takvim', label: 'Sınav takvimi', icon: CalendarDays },
   { to: '/istatistik', label: 'İstatistik', icon: BarChart3 },
+  { to: '/not-hesabi', label: 'Not hesabı', icon: Calculator },
   { to: '/pomodoro', label: 'Pomodoro', icon: Timer },
   { to: '/ara', label: 'Ara', icon: Search },
 ]

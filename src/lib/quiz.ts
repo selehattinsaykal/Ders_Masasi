@@ -44,7 +44,7 @@ export async function startAttempt(o: StartOptions): Promise<string> {
   const list = o.shuffleQuestions ? shuffle(o.questions) : [...o.questions].sort((a, b) => a.order - b.order)
   const optionOrder: Record<string, number[]> = {}
   if (o.shuffleOptions)
-    for (const q of list) if (q.type === 'mcq' && q.options) optionOrder[q.id] = shuffle(q.options.map((_, i) => i))
+    for (const q of list) if (q.type === 'mcq' && q.options && !lettersOnly(q)) optionOrder[q.id] = shuffle(q.options.map((_, i) => i))
   const attempt: Attempt = stamp({
     courseId: o.courseId,
     setId: o.setId,
@@ -141,4 +141,9 @@ export function correctAnswerText(q: Question): string {
     default:
       return q.solution ?? ''
   }
+}
+
+/** Şıkları yalnızca harf olan soru (şıklar görselin içinde): karıştırılmaz, harf balonu olarak gösterilir. */
+export function lettersOnly(q: Pick<Question, 'type' | 'options'>): boolean {
+  return q.type === 'mcq' && !!q.options?.length && q.options.every((o, i) => o.trim() === 'ABCDEFGH'[i])
 }

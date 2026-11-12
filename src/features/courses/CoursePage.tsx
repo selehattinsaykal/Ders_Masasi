@@ -15,10 +15,12 @@ import { QuizzesTab } from '../quizzes/QuizzesTab'
 import { DecksTab } from '../flashcards/DecksTab'
 import { CodeTab } from '../code/CodeTab'
 import { CourseStats } from '../stats/CourseStats'
+import { NotesTab } from '../notes/NotesTab'
 
 const TABS = [
   { id: 'genel', label: 'Genel bakış' },
   { id: 'materyaller', label: 'Materyaller' },
+  { id: 'notlar', label: 'Notlar' },
   { id: 'testler', label: 'Testler' },
   { id: 'kartlar', label: 'Kartlar' },
   { id: 'kod', label: 'Kod' },
@@ -109,6 +111,7 @@ export default function CoursePage() {
 
       {tab === 'genel' && <OverviewTab course={course} />}
       {tab === 'materyaller' && <MaterialsTab course={course} />}
+      {tab === 'notlar' && <NotesTab course={course} />}
       {tab === 'testler' && <QuizzesTab course={course} />}
       {tab === 'kartlar' && <DecksTab course={course} />}
       {tab === 'kod' && <CodeTab course={course} />}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { StudyDB, deleteCard, patch, setSetting, stamp } from '../db/db'
+import { StudyDB, deleteCard, deleteCourse, patch, setSetting, stamp } from '../db/db'
 import { TABLES } from '../db/schema'
 import { BackupError, backupFileName, exportBackup, importBackup, readManifest } from './backup'
 import { importContent, parseContent } from './content'
@@ -73,6 +73,7 @@ async function seed(d: StudyDB) {
   await d.exams.add(stamp({ courseId: course.id, type: 'vize' as const, date: Date.UTC(2026, 10, 20) }))
   await d.snippets.add(stamp({ courseId: course.id, title: 'deneme', code: 'print(1)', stdin: '', pythonVersion: '3.9' }))
   await d.studySessions.add(stamp({ courseId: course.id, kind: 'pomodoro' as const, startedAt: 1, durationSec: 1500 }))
+  await d.notes.add(stamp({ courseId: course.id, title: 'Formüller', body: '$O(n \log n)$', pinned: true }))
   await setSetting(d, 'pythonVersion', '3.9')
   return { course, file, blob, card }
 }
@@ -97,6 +98,7 @@ describe('yedek gidiş-dönüş', () => {
     const m = await readManifest(file)
     expect(m).toMatchObject({ scope: 'full', includesFiles: true, includesProgress: true, courseNames: ['Veri Yapıları'] })
     expect(m.counts.cards).toBe(2)
+    expect(m.counts.notes).toBe(1)
     expect(m.blobBytes).toBe(PDF_BYTES.byteLength)
 
     const b = fresh()
@@ -216,6 +218,17 @@ describe('yedek birleştirme', () => {
     expect(await phone.cards.get(card.id)).toBeUndefined()
     expect(r.deleted).toBeGreaterThanOrEqual(1)
     expect(await phone.reviews.where('cardId').equals(card.id).count()).toBe(0)
+  })
+})
+
+describe('ders silme', () => {
+  it('dersin notlarını da siler ve silme izi bırakır', async () => {
+    const d = fresh()
+    const { course } = await seed(d)
+    const [note] = await d.notes.toArray()
+    await deleteCourse(d, course.id)
+    expect(await d.notes.count()).toBe(0)
+    expect(await d.tombstones.get(note.id)).toMatchObject({ table: 'notes' })
   })
 })
 

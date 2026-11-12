@@ -4,7 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Layers, Pencil, Plus, Star, Trash2 } from 'lucide-react'
 import { db, deleteCard, deleteDeck, patch } from '../../db/db'
 import type { Card } from '../../db/schema'
-import { relativeDay } from '../../lib/format'
+import { relativeDay, plainText } from '../../lib/format'
 import { BackLink } from '../../ui/Layout'
 import { useFeedback } from '../../ui/feedback'
 import { Badge, Button, Check, Empty, Field, IconButton, Input, Modal, PageHeader, Panel, SectionTitle } from '../../ui/kit'
@@ -55,7 +55,7 @@ export default function DeckPage() {
   }
 
   const q = filter.trim().toLocaleLowerCase('tr')
-  const shown = q ? cards.filter((c) => `${c.front} ${c.back} ${c.topic ?? ''}`.toLocaleLowerCase('tr').includes(q)) : cards
+  const shown = q ? cards.filter((c) => `${plainText(c.front)} ${plainText(c.back)} ${c.topic ?? ''}`.toLocaleLowerCase('tr').includes(q)) : cards
 
   return (
     <>
@@ -137,8 +137,8 @@ export default function DeckPage() {
                 {shown.map((c) => (
                   <li key={c.id} className="flex items-start gap-1 rounded-xl border border-line bg-surface py-2 pr-1.5 pl-4">
                     <div className="grid min-w-0 flex-1 gap-x-4 gap-y-1 py-1.5 sm:grid-cols-2">
-                      <p className="line-clamp-3 font-semibold">{c.front}</p>
-                      <p className="line-clamp-3 text-soft">{c.back}</p>
+                      <p className="line-clamp-3 font-semibold">{plainText(c.front)}</p>
+                      <p className="line-clamp-3 text-soft">{plainText(c.back)}</p>
                       <p className="flex flex-wrap items-center gap-1.5 text-sm sm:col-span-2">
                         {c.topic && <Badge tone="pen">{c.topic}</Badge>}
                         {c.fsrs.reps === 0 ? <Badge>Yeni</Badge> : c.due <= now ? <Badge tone="warn">Tekrar zamanı</Badge> : <span className="text-soft">Sonraki tekrar: {relativeDay(c.due)}</span>}

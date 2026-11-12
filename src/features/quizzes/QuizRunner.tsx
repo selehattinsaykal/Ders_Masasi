@@ -6,7 +6,7 @@ import { db, patch } from '../../db/db'
 import { MODE_LABEL, QUESTION_TYPE_LABEL, type Answer, type Question, type Result } from '../../db/schema'
 import { clock, cx } from '../../lib/format'
 import { gradeCode } from '../../lib/grading'
-import { autoGrade, buildQuestionStats, finishAttempt, saveAnswer } from '../../lib/quiz'
+import { autoGrade, buildQuestionStats, finishAttempt, lettersOnly, saveAnswer } from '../../lib/quiz'
 import { FocusBar } from '../../ui/Layout'
 import { Markdown } from '../../ui/Markdown'
 import { useFeedback } from '../../ui/feedback'
@@ -177,7 +177,7 @@ export default function QuizRunner() {
       }
       if (locked) return
       if (q.type === 'mcq') {
-        const order = attempt?.optionOrder?.[q.id] ?? q.options!.map((_, i) => i)
+        const order = (!lettersOnly(q) && attempt?.optionOrder?.[q.id]) || q.options!.map((_, i) => i)
         const k = e.key.toUpperCase()
         const pos = /^[1-8]$/.test(k) ? Number(k) - 1 : /^[A-H]$/.test(k) ? k.charCodeAt(0) - 65 : -1
         if (pos >= 0 && pos < order.length) setResponse(order[pos])

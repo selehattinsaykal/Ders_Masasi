@@ -300,3 +300,41 @@
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
+
+/* Yazdırma: yalnızca içerik (ör. sınav öncesi özet) basılır. */
+.print-only {
+  display: none;
+}
+@media print {
+  body {
+    background: #fff !important;
+    color: #000;
+  }
+  aside,
+  nav,
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block;
+  }
+  main {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+  .min-h-dvh {
+    padding-left: 0 !important;
+  }
+  .summary-sheet {
+    columns: 2;
+    column-gap: 1.2rem;
+    font-size: 11pt;
+  }
+  .summary-sheet section {
+    margin: 0 0 0.8rem;
+  }
+  .md pre,
+  .md code {
+    background: #f3f3f3 !important;
+  }
+}

@@ -8,6 +8,7 @@ import type {
   Course,
   Deck,
   Exam,
+  Note,
   Question,
   QuestionSet,
   Review,
@@ -36,6 +37,7 @@ export class StudyDB extends Dexie {
   snippets!: Table<Snippet, string>
   exams!: Table<Exam, string>
   studySessions!: Table<StudySession, string>
+  notes!: Table<Note, string>
   settings!: Table<Setting, string>
   tombstones!: Table<Tombstone, string>
 
@@ -60,6 +62,8 @@ export class StudyDB extends Dexie {
       settings: 'id',
       tombstones: 'id',
     })
+    // 2: ders notları
+    this.version(2).stores({ notes: 'id, courseId' })
   }
 }
 
@@ -170,6 +174,7 @@ export async function deleteCourse(d: StudyDB, courseId: string): Promise<void> 
       'snippets',
       'exams',
       'studySessions',
+      'notes',
     ]
     for (const t of byCourse) {
       const keys = (await d.table(t).where('courseId').equals(courseId).primaryKeys()) as string[]

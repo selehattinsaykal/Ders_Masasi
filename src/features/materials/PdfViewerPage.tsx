@@ -7,6 +7,7 @@ import {
   ClipboardCheck,
   Contrast,
   Maximize,
+  Scissors,
   Search,
   Trash2,
   X,
@@ -16,10 +17,12 @@ import {
 import { db, patch, removeRows, stamp } from '../../db/db'
 import type { StudyFile } from '../../db/schema'
 import { cx } from '../../lib/format'
-import { openPdf, pageText, type PdfDoc } from '../../lib/pdf'
+import { openPdf, pageText, renderRegion, type PdfDoc, type Region } from '../../lib/pdf'
 import { FocusBar } from '../../ui/Layout'
 import { Button, Empty, IconButton, Input, Textarea } from '../../ui/kit'
 import { OpticalPanel } from './OpticalPanel'
+import { CropLayer } from './CropLayer'
+import { CropSaveModal } from './CropSaveModal'
 
 type PanelKind = 'marks' | 'search' | 'optik' | null
 const ZOOMS = [0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3]
@@ -83,6 +86,10 @@ export default function PdfViewerPage() {
   const [boxWidth, setBoxWidth] = useState(0)
   const [ratios, setRatios] = useState<number[]>([])
   const [visible, setVisible] = useState<Set<number>>(new Set([1]))
+  const [cropMode, setCropMode] = useState(false)
+  const [crop, setCrop] = useState<{ page: number; region: Region } | null>(null)
+  const [cropImage, setCropImage] = useState<{ page: number; url: string } | null>(null)
+  const [cropBusy, setCropBusy] = useState(false)
 
   const scroller = useRef<HTMLDivElement>(null)
   const pageEls = useRef<(HTMLDivElement | null)[]>([])
@@ -252,6 +259,15 @@ export default function PdfViewerPage() {
     setZoom(ZOOMS[Math.max(0, Math.min(ZOOMS.length - 1, i + dir))])
   }
   const toggle = (p: PanelKind) => setPanel((cur) => (cur === p ? null : p))
+  const saveCrop = async () => {
+    if (!doc || !crop) return
+    setCropBusy(true)
+    try {
+      setCropImage({ page: crop.page, url: await renderRegion(doc, crop.page, crop.region) })
+    } finally {
+      setCropBusy(false)
+    }
+  }
 
   return (
     <div className="flex h-dvh flex-col bg-sunken">
@@ -305,6 +321,17 @@ export default function PdfViewerPage() {
         <IconButton label="Optik form" active={panel === 'optik'} onClick={() => toggle('optik')}>
           <ClipboardCheck size={19} />
         </IconButton>
+        <IconButton
+          label="Kes: seçtiğin bölümden soru, kart ya da not yap"
+          active={cropMode}
+          onClick={() => {
+            setCropMode((v) => !v)
+            setCrop(null)
+          }}
+          disabled={!doc}
+        >
+          <Scissors size={19} />
+        </IconButton>
         <IconButton label="Renkleri ters çevir (gece okuma)" active={invert} onClick={() => setInvert((v) => !v)}>
           <Contrast size={19} />
         </IconButton>
@@ -318,6 +345,28 @@ export default function PdfViewerPage() {
       </div>
 
       <div className="relative flex min-h-0 flex-1 flex-col lg:flex-row">
+        {cropMode && (
+          <div className="absolute inset-x-0 bottom-3 z-20 flex justify-center px-3 lg:right-auto lg:left-1/2 lg:-translate-x-1/2">
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2 shadow-lg">
+              <span className="text-sm font-semibold">{crop ? `${crop.page}. sayfadan bölüm seçildi` : 'Sürükleyerek bir bölüm seç'}</span>
+              {crop && (
+                <Button size="sm" variant="primary" onClick={saveCrop} disabled={cropBusy}>
+                  {cropBusy ? 'Hazırlanıyor…' : 'Kaydet'}
+                </Button>
+              )}
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setCropMode(false)
+                  setCrop(null)
+                }}
+              >
+                Bitir
+              </Button>
+            </div>
+          </div>
+        )}
         <div ref={scroller} className={cx('relative min-h-0 flex-1 overflow-auto [scrollbar-gutter:stable]', invert && 'pdf-invert')}>
           {error && <div className="p-6"><Empty title="PDF açılamadı">{error}</Empty></div>}
           {!doc && !error && <p className="p-6 text-center text-soft">PDF açılıyor…</p>}
@@ -330,10 +379,16 @@ export default function PdfViewerPage() {
                     pageEls.current[i] = el
                   }}
                   data-page={i + 1}
-                  className="bg-white shadow-sm"
+                  className="relative bg-white shadow-sm"
                   style={{ width: pageWidth, height: Math.round(pageWidth * r) }}
                 >
                   <PageCanvas doc={doc} n={i + 1} width={pageWidth} active={visible.has(i + 1)} onRatio={onRatio} />
+                  {cropMode && (
+                    <CropLayer
+                      selection={crop?.page === i + 1 ? crop.region : null}
+                      onSelect={(r) => setCrop(r ? { page: i + 1, region: r } : null)}
+                    />
+                  )}
                 </div>
               ))}
             </div>
@@ -356,6 +411,16 @@ export default function PdfViewerPage() {
           </aside>
         )}
       </div>
+      <CropSaveModal
+        open={!!cropImage}
+        onClose={() => {
+          setCropImage(null)
+          setCrop(null)
+        }}
+        image={cropImage?.url ?? null}
+        page={cropImage?.page ?? page}
+        file={file}
+      />
     </div>
   )
 }

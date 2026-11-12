@@ -5,12 +5,16 @@ Vize ve finallere çalışmak için kişisel uygulama. Telefonda ve bilgisayarda
 
 ## Neler var
 
-- **Dersler:** her dersin PDF'leri, testleri, kartları, kodları, konu listesi ve istatistiği.
+- **Dersler:** her dersin PDF'leri, notları, testleri, kartları, kodları, konu listesi ve istatistiği.
+- **Notlar:** formül ve kod destekli ders notları; sabitlenenler yazdırılabilir sınav öncesi özette toplanır.
+- **Not hesabı:** vize ve diğer notlara göre finalden kaç alman gerektiği (final barajı dahil).
 - **PDF:** ders sunumu, çalışma PDF'i, çıkmış sınav. Kaldığın sayfa, yer imi ve not,
-  PDF içinde arama, gece okuma, **optik form** (PDF'teki sınavı işaretle, anahtarla karşılaştır).
+  PDF içinde arama, gece okuma, **optik form** (PDF'teki sınavı işaretle, anahtarla karşılaştır),
+  **kesme** (sayfadan bir bölümü seçip soru, kart ya da not olarak kaydet).
 - **Testler:** çıkmış sorular ve çalışma soruları. Çoktan seçmeli, doğru/yanlış,
   boşluk doldurma, klasik, kod. Çalışma modu, sınav modu, yanlışlarım, karışık test.
   Doğru/yanlış/boş sayıları, konu bazında döküm, soru geçmişi.
+  **Benzer soru iste:** yanlışlarından Claude'a verilecek hazır istem.
 - **Kartlar:** arkalı önlü, aralıklı tekrar (FSRS), sınav öncesi mod.
 - **Python:** tarayıcıda çalışır, sürüm seçilir (3.9–3.13), otomatik testler.
 - **JSON içe aktarma:** hazırlattığın kart ve soru dosyaları; biçim için

@@ -4,7 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Pencil, Play, Plus, Star, Timer, Trash2 } from 'lucide-react'
 import { db, deleteQuestion, deleteSet, patch } from '../../db/db'
 import { EXAM_TYPE_LABEL, MODE_LABEL, QUESTION_TYPE_LABEL, type Question } from '../../db/schema'
-import { formatDateTime, formatDuration } from '../../lib/format'
+import { formatDateTime, formatDuration, plainText } from '../../lib/format'
 import { buildQuestionStats, startAttempt } from '../../lib/quiz'
 import { attemptPercent } from '../../lib/stats'
 import { BackLink } from '../../ui/Layout'
@@ -183,7 +183,7 @@ export default function SetPage() {
                   <li key={q.id} className="flex items-start gap-1 rounded-xl border border-line bg-surface py-2 pr-1.5 pl-4">
                     <span className="tabular w-7 shrink-0 pt-2 font-bold text-soft">{i + 1}.</span>
                     <div className="min-w-0 flex-1 py-1.5">
-                      <p className="line-clamp-2">{q.prompt}</p>
+                      <p className="line-clamp-2">{plainText(q.prompt)}</p>
                       <p className="tabular mt-1 flex flex-wrap items-center gap-1.5 text-sm">
                         <Badge>{QUESTION_TYPE_LABEL[q.type]}</Badge>
                         {q.topic && <Badge tone="pen">{q.topic}</Badge>}

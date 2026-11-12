@@ -8,6 +8,7 @@ import { percentOf } from '../../lib/grading'
 import { buildQuestionStats, isMissed, startAttempt } from '../../lib/quiz'
 import { attemptPercent } from '../../lib/stats'
 import { Badge, Button, Empty, Panel, ScoreRow, SectionTitle } from '../../ui/kit'
+import { GradeCard } from '../grades/GradeCard'
 
 export function OverviewTab({ course }: { course: Course }) {
   const nav = useNavigate()
@@ -45,8 +46,16 @@ export function OverviewTab({ course }: { course: Course }) {
   const unfinished = attempts.find((a) => !a.finishedAt && a.mode !== 'optik')
   const answered = res.correct + res.wrong + res.partial
 
+  const gradeSection = (
+    <section>
+      <SectionTitle>Not hesabı</SectionTitle>
+      <GradeCard course={course} compact />
+    </section>
+  )
+
   if (!files.length && !questions.length && !cards.length)
     return (
+      <div className="space-y-6">
       <Empty
         title="Bu derste henüz içerik yok"
         action={
@@ -60,6 +69,8 @@ export function OverviewTab({ course }: { course: Course }) {
       >
         Ders sunumlarını ve çalışma PDF’lerini yükle, hazırlattığın kart ve soru dosyalarını içe aktar.
       </Empty>
+      {gradeSection}
+      </div>
     )
 
   const retryMissed = async () => {
@@ -173,6 +184,7 @@ export function OverviewTab({ course }: { course: Course }) {
           </ul>
         </section>
       )}
+      {gradeSection}
     </div>
   )
 }

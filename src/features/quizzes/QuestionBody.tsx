@@ -4,6 +4,7 @@ import { db, getSetting } from '../../db/db'
 import type { Question, Result } from '../../db/schema'
 import { LETTERS, cx } from '../../lib/format'
 import { DEFAULT_PY, resolveVersion } from '../../lib/python'
+import { lettersOnly } from '../../lib/quiz'
 import { Markdown } from '../../ui/Markdown'
 import { Bubble, Input, Textarea } from '../../ui/kit'
 import { CodeWorkbench } from '../code/CodeWorkbench'
@@ -25,6 +26,39 @@ export interface QuestionBodyProps {
 
 /** Sorunun cevap alanı: tipine göre şıklar, D/Y, boşluk, metin ya da kod editörü. */
 export function QuestionBody({ q, order, response, onResponse, revealed, locked, onSubmit, onCodeTested }: QuestionBodyProps) {
+  if (q.type === 'mcq' && lettersOnly(q)) {
+    // Şıklar görselin içinde: yalnızca harf balonları, karıştırılmadan.
+    return (
+      <div className="flex flex-wrap gap-2.5" role="radiogroup" aria-label="Şıklar">
+        {q.options!.map((L, i) => {
+          const picked = response === i
+          const state = revealed ? (i === q.answerIndex ? 'correct' : picked ? 'wrong' : 'idle') : picked ? 'picked' : 'idle'
+          return (
+            <button
+              key={i}
+              type="button"
+              role="radio"
+              aria-checked={picked}
+              aria-label={`${L} şıkkı`}
+              disabled={locked}
+              onClick={() => onResponse(picked ? null : i)}
+              className={cx(
+                'grid size-14 place-items-center rounded-full border-2 font-display text-xl font-bold transition-colors',
+                state === 'idle' && 'border-line text-soft',
+                state === 'idle' && !locked && 'hover:border-pen hover:text-ink',
+                state === 'picked' && 'border-pen bg-pen text-on-pen',
+                state === 'correct' && 'border-ok bg-ok text-surface',
+                state === 'wrong' && 'border-bad bg-bad text-surface',
+              )}
+            >
+              {L}
+            </button>
+          )
+        })}
+      </div>
+    )
+  }
+
   if (q.type === 'mcq') {
     const idx = order ?? (q.options ?? []).map((_, i) => i)
     return (

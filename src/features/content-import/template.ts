@@ -105,3 +105,80 @@ export function buildPrompt(kind: 'kart' | 'soru' | 'cikmis' | 'kod'): string {
   }
   return `${task[kind]}\n\nÇıktıyı aşağıdaki biçimde, bir uygulamaya içe aktarılacak JSON olarak ver.\n\n${RULES}\n\nÖrnek:\n${EXAMPLE_JSON}`
 }
+
+export interface MistakeItem {
+  type: 'mcq' | 'tf' | 'fill' | 'open' | 'code'
+  prompt: string
+  topic?: string
+  options?: string[]
+  answerIndex?: number
+  answerBool?: boolean
+  answers?: string[]
+  solution?: string
+  pythonVersion?: string
+  /** Kullanıcının verdiği son cevap. */
+  given?: unknown
+}
+
+const TYPE_NAME: Record<MistakeItem['type'], string> = {
+  mcq: 'çoktan seçmeli',
+  tf: 'doğru/yanlış',
+  fill: 'boşluk doldurma',
+  open: 'klasik',
+  code: 'kod',
+}
+const L = 'ABCDEFGH'
+
+/** Gömülü görselleri istemden çıkarır (yapay zekâ göremez, istemi şişirir). */
+function stripImages(s: string): string {
+  return s.replace(/!\[[^\]]*\]\(data:[^)]*\)/g, '[görsel]').trim()
+}
+
+function oneLine(s: string, max = 400): string {
+  const t = stripImages(s).replace(/\s+/g, ' ')
+  return t.length > max ? `${t.slice(0, max)}…` : t
+}
+
+function describeMistake(m: MistakeItem, i: number): string {
+  const lines = [`${i + 1}. (${TYPE_NAME[m.type]}${m.topic ? `, konu: ${m.topic}` : ''}) ${oneLine(m.prompt)}`]
+  const g = m.given
+  if (m.type === 'mcq' && m.options) {
+    lines.push(`   Şıklar: ${m.options.map((o, j) => `${L[j]}) ${oneLine(o, 120)}`).join('  ')}`)
+    lines.push(`   Doğru cevap: ${L[m.answerIndex ?? 0]}`)
+    if (typeof g === 'number') lines.push(`   Benim cevabım: ${L[g]}`)
+  } else if (m.type === 'tf') {
+    lines.push(`   Doğru cevap: ${m.answerBool ? 'Doğru' : 'Yanlış'}`)
+    if (typeof g === 'boolean') lines.push(`   Benim cevabım: ${g ? 'Doğru' : 'Yanlış'}`)
+  } else if (m.type === 'fill') {
+    lines.push(`   Doğru cevap: ${(m.answers ?? []).join(' / ')}`)
+    if (typeof g === 'string' && g.trim()) lines.push(`   Benim cevabım: ${oneLine(g, 200)}`)
+  } else {
+    if (m.solution) lines.push(`   Örnek çözüm: ${oneLine(m.solution, 600)}`)
+    if (typeof g === 'string' && g.trim()) lines.push(`   Benim cevabım: ${oneLine(g, 600)}`)
+  }
+  return lines.join('\n')
+}
+
+/** Yanlış yapılan sorulardan, benzer yeni sorular isteyen hazır istem. */
+export function buildMistakesPrompt(o: { course: string; items: MistakeItem[]; count: number; title: string }): string {
+  const items = o.items.slice(0, 30)
+  const topics = [...new Set(items.map((m) => m.topic).filter(Boolean))]
+  const py = items.find((m) => m.type === 'code' && m.pythonVersion)?.pythonVersion
+  const parts = [
+    `Aşağıda “${o.course}” dersinde yanlış yaptığım ${items.length} soru var. Bu soruların ölçtüğü bilgi ve becerileri hedefleyen ${o.count} yeni soru hazırla.`,
+    '- Soruları kopyalama; aynı kavramı farklı örnekler, sayılar ve durumlarla sor.',
+    '- Soru tiplerini yanlışlarımdaki dağılıma yakın tut.',
+    '- Cevabımdan anlaşılan kavram yanılgısını her sorunun "explanation" alanında kısaca düzelt.',
+    topics.length ? `- Zayıf olduğum konular: ${topics.join(', ')}. Her soruya "topic" alanında bu konu adlarından uygun olanı yaz.` : null,
+    py ? `- Kod sorularında Python ${py} kullan ve "pythonVersion": "${py}" yaz; bu sürümde olmayan dil özelliklerini kullanma.` : null,
+    `- Tek bir test oluştur: "title": "${o.title}", "kind": "calisma". Kart destesi ekleme.`,
+    '',
+    'Yanlış yaptığım sorular:',
+    items.map(describeMistake).join('\n\n'),
+    '',
+    'Çıktıyı aşağıdaki biçimde, bir uygulamaya içe aktarılacak JSON olarak ver.',
+    '',
+    RULES,
+  ]
+  return parts.filter((p): p is string => p !== null).join('\n')
+}

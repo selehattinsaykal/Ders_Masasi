@@ -7,12 +7,30 @@ export interface Base {
   updatedAt: number
 }
 
+export interface GradePart {
+  id: string
+  name: string
+  /** Yüzde ağırlık, ör. 40. */
+  weight: number
+  /** Alınan not (0–100); henüz yoksa boş. */
+  score?: number
+}
+
+export interface GradingScheme {
+  parts: GradePart[]
+  /** Dersi geçmek için gereken ortalama, ör. 50. */
+  passing: number
+  /** Son sınavdan (final/büt) alınması gereken en düşük not, varsa. */
+  finalMin?: number
+}
+
 export interface Course extends Base {
   name: string
   code?: string
   term?: string
   color: string
   archived: boolean
+  grading?: GradingScheme
 }
 
 export type TopicStatus = 'todo' | 'doing' | 'done'
@@ -248,6 +266,14 @@ export interface StudySession extends Base {
   durationSec: number
 }
 
+/** Ders notu: Markdown, formül ve kod destekli. Sabitlenenler sınav öncesi özet olarak öne çıkar. */
+export interface Note extends Base {
+  courseId: string
+  title: string
+  body: string
+  pinned: boolean
+}
+
 export interface Setting {
   id: string
   value: unknown
@@ -277,12 +303,13 @@ export const TABLES = [
   'snippets',
   'exams',
   'studySessions',
+  'notes',
   'settings',
   'tombstones',
 ] as const
 export type TableName = (typeof TABLES)[number]
 
-export const SCHEMA_VERSION = 1
+export const SCHEMA_VERSION = 2
 
 export const COURSE_COLORS = [
   '#2747d4',

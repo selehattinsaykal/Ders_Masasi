@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { BookOpen, FileText, HelpCircle, Layers, ListChecks, Terminal, type LucideIcon } from 'lucide-react'
+import { BookOpen, FileText, HelpCircle, Layers, ListChecks, NotebookPen, Terminal, type LucideIcon } from 'lucide-react'
 import { db } from '../../db/db'
 import { Input, PageHeader } from '../../ui/kit'
+import { plainText } from '../../lib/format'
 
 interface Hit {
   key: string
@@ -22,8 +23,8 @@ const LIMIT = 12
 async function search(query: string): Promise<Group[]> {
   const q = query.trim().toLocaleLowerCase('tr')
   if (q.length < 2) return []
-  const has = (...parts: (string | undefined)[]) => parts.some((p) => p?.toLocaleLowerCase('tr').includes(q))
-  const [courses, files, sets, questions, decks, cards, snippets] = await Promise.all([
+  const has = (...parts: (string | undefined)[]) => parts.some((p) => !!p && plainText(p).toLocaleLowerCase('tr').includes(q))
+  const [courses, files, sets, questions, decks, cards, snippets, notes] = await Promise.all([
     db.courses.toArray(),
     db.files.toArray(),
     db.questionSets.toArray(),
@@ -31,17 +32,26 @@ async function search(query: string): Promise<Group[]> {
     db.decks.toArray(),
     db.cards.toArray(),
     db.snippets.toArray(),
+    db.notes.toArray(),
   ])
   const course = new Map(courses.map((c) => [c.id, c.name]))
   const setTitle = new Map(sets.map((s) => [s.id, s.title]))
   const deckTitle = new Map(decks.map((d) => [d.id, d.title]))
-  const cut = (s: string) => (s.length > 140 ? `${s.slice(0, 140)}…` : s)
+  const cut = (raw: string) => {
+    const s = plainText(raw)
+    return s.length > 140 ? `${s.slice(0, 140)}…` : s
+  }
 
   const groups: Group[] = [
     {
       label: 'Dersler',
       icon: BookOpen,
       hits: courses.filter((c) => has(c.name, c.code)).map((c) => ({ key: c.id, to: `/ders/${c.id}`, title: c.name, detail: [c.code, c.term].filter(Boolean).join(', ') })),
+    },
+    {
+      label: 'Notlar',
+      icon: NotebookPen,
+      hits: notes.filter((n) => has(n.title, n.body)).map((n) => ({ key: n.id, to: `/not/${n.id}`, title: n.title || 'Adsız not', detail: course.get(n.courseId) ?? '' })),
     },
     {
       label: 'PDF’ler',
@@ -94,7 +104,7 @@ export default function SearchPage() {
   return (
     <>
       <PageHeader title="Ara" />
-      <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Ders, soru, kart, PDF ya da kod ara" aria-label="Arama" autoFocus type="search" />
+      <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Ders, not, soru, kart, PDF ya da kod ara" aria-label="Arama" autoFocus type="search" />
 
       <div className="mt-6 space-y-7" aria-live="polite">
         {groups === null && <p className="text-soft">Aramak için en az iki harf yaz. PDF’lerin içindeki metni aramak için PDF’i açıp oradaki aramayı kullan.</p>}

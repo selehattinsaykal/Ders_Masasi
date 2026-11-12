@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { BookOpenCheck, FileJson, Plus, Shuffle, Trash2 } from 'lucide-react'
+import { BookOpenCheck, FileJson, Plus, Shuffle, Sparkles, Trash2 } from 'lucide-react'
 import { db, deleteAttempt } from '../../db/db'
 import { EXAM_TYPE_LABEL, MODE_LABEL, type Attempt, type Course, type QuestionSet, type SetKind } from '../../db/schema'
 import { relativeDay } from '../../lib/format'
@@ -10,6 +10,7 @@ import { attemptPercent } from '../../lib/stats'
 import { Badge, Button, Empty, IconButton, SectionTitle } from '../../ui/kit'
 import { CustomTest } from './CustomTest'
 import { SetForm } from './SetForm'
+import { MistakesPrompt, toMistake } from '../content-import/MistakesPrompt'
 
 const KIND_TITLE: Record<SetKind, string> = { cikmis: 'Çıkmış sorular', calisma: 'Çalışma soruları' }
 
@@ -18,6 +19,7 @@ export function QuizzesTab({ course }: { course: Course }) {
   const [params, setParams] = useSearchParams()
   const [custom, setCustom] = useState(false)
   const [adding, setAdding] = useState(false)
+  const [asking, setAsking] = useState(false)
 
   useEffect(() => {
     if (params.get('karisik')) {
@@ -34,6 +36,9 @@ export function QuizzesTab({ course }: { course: Course }) {
       db.attempts.where('courseId').equals(course.id).toArray(),
     ])
     const stats = buildQuestionStats(answers)
+    // Her sorunun en son verilen (boş olmayan) cevabı.
+    const lastGiven = new Map<string, unknown>()
+    for (const a of [...answers].sort((x, y) => x.updatedAt - y.updatedAt)) if (a.result !== 'blank') lastGiven.set(a.questionId, a.response)
     const counts = new Map<string, number>()
     for (const q of questions) counts.set(q.setId, (counts.get(q.setId) ?? 0) + 1)
     const last = new Map<string, Attempt>()
@@ -44,6 +49,7 @@ export function QuizzesTab({ course }: { course: Course }) {
       last,
       questions,
       missed: questions.filter((q) => isMissed(stats.get(q.id))),
+      lastGiven,
       unfinished: attempts.filter((a) => !a.finishedAt && a.mode !== 'optik').sort((a, b) => b.startedAt - a.startedAt),
     }
   }, [course.id])
@@ -102,6 +108,11 @@ export function QuizzesTab({ course }: { course: Course }) {
             Yanlışlarım ({data.missed.length})
           </Button>
         )}
+        {data.missed.length > 0 && (
+          <Button icon={<Sparkles size={18} />} onClick={() => setAsking(true)}>
+            Benzer soru iste
+          </Button>
+        )}
         <Button icon={<Plus size={18} />} onClick={() => setAdding(true)}>
           Yeni test
         </Button>
@@ -156,6 +167,13 @@ export function QuizzesTab({ course }: { course: Course }) {
           ))
       )}
 
+      <MistakesPrompt
+        open={asking}
+        onClose={() => setAsking(false)}
+        course={course.name}
+        courseId={course.id}
+        items={data.missed.map((q) => toMistake(q, data.lastGiven.get(q.id)))}
+      />
       <CustomTest open={custom} onClose={() => setCustom(false)} course={course} />
       <SetForm open={adding} onClose={() => setAdding(false)} courseId={course.id} onSaved={(id) => nav(`/set/${id}`)} />
     </div>
